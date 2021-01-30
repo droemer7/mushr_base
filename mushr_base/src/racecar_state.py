@@ -28,81 +28,81 @@ class RacecarState:
     def __init__(self):
         # speed (rpm) = self.SPEED_TO_ERPM_OFFSET + self.SPEED_TO_ERPM_GAIN * speed (m/s)
         self.SPEED_TO_ERPM_OFFSET = float(
-            rospy.get_param("vesc/speed_to_erpm_offset", 0.0)
+            rospy.get_param("vesc/speed_to_erpm_offset")
         )
         self.SPEED_TO_ERPM_GAIN = float(
-            rospy.get_param("vesc/speed_to_erpm_gain", 4614.0)
+            rospy.get_param("vesc/speed_to_erpm_gain")
         )
 
         # servo angle = self.STEERING_TO_SERVO_OFFSET + self.STEERING_TO_SERVO_GAIN * steering_angle (rad)
         self.STEERING_TO_SERVO_OFFSET = float(
-            rospy.get_param("vesc/steering_angle_to_servo_offset", 0.5304)
+            rospy.get_param("vesc/steering_angle_to_servo_offset")
         )
         self.STEERING_TO_SERVO_GAIN = float(
-            rospy.get_param("vesc/steering_angle_to_servo_gain", -1.2135)
+            rospy.get_param("vesc/steering_angle_to_servo_gain")
         )
 
         # Length of the car
-        self.CAR_LENGTH = float(rospy.get_param("vesc/chassis_length", 0.33))
+        self.CAR_LENGTH = float(rospy.get_param("vesc/chassis_length"))
 
         # Width of the car
-        self.CAR_WIDTH = float(rospy.get_param("vesc/wheelbase", 0.25))
+        self.CAR_WIDTH = float(rospy.get_param("vesc/wheelbase"))
 
         # The radius of the car wheel in meters
         self.CAR_WHEEL_RADIUS = 0.0976 / 2.0
 
         # Rate at which to publish joints and tf
-        self.UPDATE_RATE = float(rospy.get_param("~update_rate", 20.0))
+        self.UPDATE_RATE = float(rospy.get_param("~update_rate"))
 
         # Speed noise mean is computed as the most recent speed multiplied by this value
-        self.SPEED_OFFSET = float(rospy.get_param("~speed_offset", 0.00))
+        self.SPEED_OFFSET = float(rospy.get_param("~speed_offset"))
 
         # Speed noise std dev
-        self.SPEED_NOISE = float(rospy.get_param("~speed_noise", 0.0001))
+        self.SPEED_NOISE = float(rospy.get_param("~speed_noise"))
 
         # Steering angle noise mean is cimputed as the most recent steering angle multiplied by this value
         self.STEERING_ANGLE_OFFSET = float(
-            rospy.get_param("~steering_angle_offset", 0.00)
+            rospy.get_param("~steering_angle_offset")
         )
 
         # Steering angle noise std dev
         self.STEERING_ANGLE_NOISE = float(
-            rospy.get_param("~steering_angle_noise", 0.000001)
+            rospy.get_param("~steering_angle_noise")
         )
 
         # Forward direction noise mean
-        self.FORWARD_OFFSET = float(rospy.get_param("~forward_offset", 0.0))
+        self.FORWARD_OFFSET = float(rospy.get_param("~forward_offset"))
 
         # Forward direction noise std dev
-        self.FORWARD_FIX_NOISE = float(rospy.get_param("~forward_fix_noise", 0.0000001))
+        self.FORWARD_FIX_NOISE = float(rospy.get_param("~forward_fix_noise"))
 
         # Additional zero-mean gaussian noise added to forward direction
         # std dev is most recent velocity times this value
-        self.FORWARD_SCALE_NOISE = float(rospy.get_param("~forward_scale_noise", 0.001))
+        self.FORWARD_SCALE_NOISE = float(rospy.get_param("~forward_scale_noise"))
 
         # Side direction noise mean
-        self.SIDE_OFFSET = float(rospy.get_param("~side_offset", 0.0))
+        self.SIDE_OFFSET = float(rospy.get_param("~side_offset"))
 
         # Side direction noise std dev
-        self.SIDE_FIX_NOISE = float(rospy.get_param("~side_fix_noise", 0.000001))
+        self.SIDE_FIX_NOISE = float(rospy.get_param("~side_fix_noise"))
 
         # Additional zero-mean gaussian noise added to side direction
         # std dev is most recent velocity times this value
-        self.SIDE_SCALE_NOISE = float(rospy.get_param("~side_scale_noise", 0.001))
+        self.SIDE_SCALE_NOISE = float(rospy.get_param("~side_scale_noise"))
 
         # Theta noise mean
-        self.THETA_OFFSET = float(rospy.get_param("~theta_offset", 0.0))
+        self.THETA_OFFSET = float(rospy.get_param("~theta_offset"))
 
         # Theta noise std dev
-        self.THETA_FIX_NOISE = float(rospy.get_param("~theta_fix_noise", 0.000001))
+        self.THETA_FIX_NOISE = float(rospy.get_param("~theta_fix_noise"))
 
         # Forces the base_footprint tf to stay in bounds, i.e. updates to the odometry
         # that make base_footprint go out of bounds will be ignored.
         # Only set to true if a map is available.
-        self.FORCE_IN_BOUNDS = bool(rospy.get_param("~force_in_bounds", False))
+        self.FORCE_IN_BOUNDS = bool(rospy.get_param("~force_in_bounds"))
 
-        # Append this prefix to any broadcasted TFs
-        self.TF_PREFIX = str(rospy.get_param("~tf_prefix", "").rstrip("/"))
+        # Prepend this prefix to any broadcasted TFs
+        self.TF_PREFIX = str(rospy.get_param("~car_name").rstrip("/"))
         if len(self.TF_PREFIX) > 0:
             self.TF_PREFIX = self.TF_PREFIX + "/"
 

@@ -33,7 +33,9 @@ class JoyTeleop:
     """
 
     def __init__(self):
-        self.CAR_NAME = rospy.get_param("~car_name", "/car")
+        self.CAR_NAME = rospy.get_param("~car_name")
+        if not self.CAR_NAME.startswith("/"):
+            self.CAR_NAME = "/" + self.CAR_NAME
         if not self.CAR_NAME.endswith("/"):
             self.CAR_NAME += "/"
 
