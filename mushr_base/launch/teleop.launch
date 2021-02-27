@@ -7,7 +7,7 @@
   <arg name="racecar_version" default="racecar-uw-nano"/>
 
   <!-- Map -->
-  <include file="$(find mcl)/launch/map_server.launch"/>
+  <include file="$(find mushr_base)/launch/map_server.launch"/>
 
   <!-- Car -->
   <group ns="$(arg car_name)">
@@ -17,7 +17,7 @@
     <!-- VESC -->
     <group ns="vesc">
       <include file="$(find vesc_main)/launch/vesc.launch">
-        <arg name="car_name" value="$(arg car_name)"/>
+        <arg name="car_name"        value="$(arg car_name)"/>
         <arg name="racecar_version" value="$(arg racecar_version)"/>
       </include>
     </group>
@@ -34,9 +34,9 @@
       <include file="$(find ackermann_cmd_mux)/launch/mux.launch"/>
     </group>
 
-    <!-- Sensors (Laser, Cameras) -->
+    <!-- Sensors (Laser, Cameras, Push Button) -->
     <include file="$(find mushr_hardware)/launch/$(arg racecar_version)/sensors.launch" >
-      <arg name="car_name" value="$(arg car_name)"/>
+      <arg name="car_name"        value="$(arg car_name)"/>
       <arg name="racecar_version" value="$(arg racecar_version)"/>
     </include>
 
@@ -47,7 +47,7 @@
 
     <!-- State Publisher -->
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="state_publisher">
-      <param name="tf_prefix" value="$(arg car_name)"/>
+      <param name="tf_prefix"         value="$(arg car_name)"/>
       <param name="robot_description" value="/$(arg car_name)/robot_description"/>
     </node>
   </group>

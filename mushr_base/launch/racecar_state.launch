@@ -1,5 +1,5 @@
 <launch>
-  <arg name="car_name"/>
+  <arg name="car_name" default="car"/>
 
   <!-- Set to force robot to abide by map_server walls -->
   <arg name="force_in_bounds" default="false"/>

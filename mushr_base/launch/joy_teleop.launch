@@ -1,6 +1,6 @@
 <!-- -*- mode: XML -*- -->
 <launch>
-  <arg name="car_name" />
+  <arg name="car_name"          default="car"/>
   <arg name="joy_teleop_config" default="$(find mushr_base)/config/joy_teleop.yaml" />
 
   <rosparam file="$(arg joy_teleop_config)" command="load" />
