@@ -1,41 +1,51 @@
 <!-- -*- mode: XML -*- -->
 <launch>
   <!-- Car name functions as a namespace for this instance -->
-  <arg name="car_name" default="car" />
+  <arg name="car_name" default="car"/>
 
   <!-- Version - racecar-mit, racecar-uw-tx2, or racecar-uw-nano -->
-  <arg name="racecar_version" default="racecar-uw-nano" />
+  <arg name="racecar_version" default="racecar-uw-nano"/>
 
+  <!-- Map -->
+  <include file="$(find mcl)/launch/map_server.launch"/>
+
+  <!-- Car -->
   <group ns="$(arg car_name)">
-    <param name="robot_description"
-           textfile="$(find mushr_description)/robots/$(arg racecar_version).urdf"/>
+    <!-- Car URDF -->
+    <param name="robot_description" textfile="$(find mushr_description)/robots/$(arg racecar_version).urdf"/>
 
+    <!-- VESC -->
     <group ns="vesc">
-         <include file="$(find vesc_main)/launch/vesc.launch">
-             <arg name="car_name" value="$(arg car_name)" />
-             <arg name="racecar_version" value="$(arg racecar_version)" />
-         </include>
+      <include file="$(find vesc_main)/launch/vesc.launch">
+        <arg name="car_name" value="$(arg car_name)"/>
+        <arg name="racecar_version" value="$(arg racecar_version)"/>
+      </include>
     </group>
 
+    <!-- Joystick Teleop -->
     <group ns="teleop">
-        <include file="$(find mushr_base)/launch/includes/joy_teleop.launch">
-            <arg name="car_name" value="$(arg car_name)" />
-        </include>
+      <include file="$(find mushr_base)/launch/joy_teleop.launch">
+        <arg name="car_name" value="$(arg car_name)"/>
+      </include>
     </group>
 
+    <!-- Ackermann Command Mux -->
     <group ns="mux">
-        <include file="$(find ackermann_cmd_mux)/launch/mux.launch" />
+      <include file="$(find ackermann_cmd_mux)/launch/mux.launch"/>
     </group>
 
+    <!-- Sensors (Laser, Cameras) -->
     <include file="$(find mushr_hardware)/launch/$(arg racecar_version)/sensors.launch" >
-        <arg name="car_name" value="$(arg car_name)" />
-        <arg name="racecar_version" value="$(arg racecar_version)" />
+      <arg name="car_name" value="$(arg car_name)"/>
+      <arg name="racecar_version" value="$(arg racecar_version)"/>
     </include>
 
-    <include file="$(find mushr_base)/launch/includes/racecar_state.launch">
-        <arg name="car_name" value="$(arg car_name)" />
+    <!-- Car State -->
+    <include file="$(find mushr_base)/launch/racecar_state.launch">
+      <arg name="car_name" value="$(arg car_name)"/>
     </include>
 
+    <!-- State Publisher -->
     <node pkg="robot_state_publisher" type="robot_state_publisher" name="state_publisher">
       <param name="tf_prefix" value="$(arg car_name)"/>
       <param name="robot_description" value="/$(arg car_name)/robot_description"/>
