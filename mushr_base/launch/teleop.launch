@@ -2,12 +2,15 @@
 <launch>
   <!-- Car name functions as a namespace for this instance -->
   <arg name="car_name" default="car"/>
+  <arg name="mapping"  default="false"/>
 
   <!-- Version - racecar-mit, racecar-uw-tx2, or racecar-uw-nano -->
-  <arg name="racecar_version" default="racecar-uw-nano"/>
+    <arg name="racecar_version" default="racecar-uw-nano"/>
 
   <!-- Map -->
-  <include file="$(find mushr_base)/launch/map_server.launch"/>
+  <group unless="($arg mapping)">
+    <include file="$(find mushr_base)/launch/map_server.launch"/>
+  </group>
 
   <!-- Car -->
   <group ns="$(arg car_name)">
@@ -35,9 +38,11 @@
     </group>
 
     <!-- Sensors (Laser, Cameras, Push Button) -->
-    <include file="$(find mushr_hardware)/launch/$(arg racecar_version)/sensors.launch" >
+    <include file="$(find mushr_hardware)/launch/$(arg racecar_version)/sensors.launch">
       <arg name="car_name"        value="$(arg car_name)"/>
       <arg name="racecar_version" value="$(arg racecar_version)"/>
+      <arg name="camera"          value="false"/>
+      <arg name="push_button"     value="false"/>
     </include>
 
     <!-- Car State -->
@@ -50,6 +55,13 @@
       <param name="tf_prefix"         value="$(arg car_name)"/>
       <param name="robot_description" value="/$(arg car_name)/robot_description"/>
     </node>
+
+    <!-- SLAM -->
+    <group if="($arg mapping)">
+      <include file="$(find mushr_base)/launch/slam.launch">
+        <arg name="car_name" value="$(arg car_name)"/>
+      </include>
+    </group>
   </group>
 
 </launch>
