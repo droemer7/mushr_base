@@ -8,7 +8,7 @@
     <arg name="racecar_version" default="racecar-uw-nano"/>
 
   <!-- Map -->
-  <group unless="($arg mapping)">
+  <group unless="$(arg mapping)">
     <include file="$(find mushr_base)/launch/map_server.launch"/>
   </group>
 
@@ -57,7 +57,7 @@
     </node>
 
     <!-- SLAM -->
-    <group if="($arg mapping)">
+    <group if="$(arg mapping)">
       <include file="$(find mushr_base)/launch/slam.launch">
         <arg name="car_name" value="$(arg car_name)"/>
       </include>
