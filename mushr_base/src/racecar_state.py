@@ -182,6 +182,29 @@ class RacecarState:
             rospy.Duration.from_sec(1.0 / self.UPDATE_RATE), self.timer_cb
         )
 
+        # Get the x offset from base_footprint to the back left wheel
+        try:
+            self.transformer.waitForTransform(
+                self.TF_PREFIX + "back_left/wheel_link",
+                self.TF_PREFIX + "base_footprint",
+                rospy.Time(0),
+                rospy.Duration(30.0)
+            )
+            position, orientation = self.transformer.lookupTransform(
+                self.TF_PREFIX + "back_left/wheel_link",
+                self.TF_PREFIX + "base_footprint",
+                rospy.Time(0)
+            )
+            self.base_to_wheel_back_left_x = position[0]
+        except Exception:
+            rospy.logwarn(
+                "Racecar State: transform from {1} to {0} not found".
+                format(self.TF_PREFIX + "back_left/wheel_link",
+                       self.TF_PREFIX + "base_footprint"
+                      )
+                )
+            self.base_to_wheel_back_left_x = 0.0
+
     """
     clip_angle: Clip an angle to be between -pi and pi
       val: Angle in radians
@@ -364,12 +387,19 @@ class RacecarState:
         else:
             # Changes in x, y, and theta
             tan_delta = np.tan(delta)
-            dtheta = ((v / self.CAR_LENGTH) * tan_delta) * dt
-            dx = (self.CAR_LENGTH / tan_delta) * (
+            cos_beta = np.cos(
+                np.arctan2(
+                    self.base_to_wheel_back_left_x * tan_delta,
+                    self.CAR_LENGTH
+                )
+            )
+            r = self.CAR_LENGTH / (cos_beta * tan_delta)
+            dtheta = (v / r) * dt
+            dx = r * (
                 np.sin(self.cur_odom_to_base_rot + dtheta)
                 - np.sin(self.cur_odom_to_base_rot)
             )
-            dy = (self.CAR_LENGTH / tan_delta) * (
+            dy = r * (
                 -1 * np.cos(self.cur_odom_to_base_rot + dtheta)
                 + np.cos(self.cur_odom_to_base_rot)
             )
