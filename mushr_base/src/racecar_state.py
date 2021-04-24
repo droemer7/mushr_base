@@ -183,27 +183,28 @@ class RacecarState:
         )
 
         # Get the x offset from base_footprint to the back left wheel
+        self.base_to_wheel_back_left_x = 0.0
+        wheel_back_left_frame_id = self.TF_PREFIX + "back_left/wheel_link"
+        base_frame_id = self.TF_PREFIX + "base_footprint"
         try:
             self.transformer.waitForTransform(
-                self.TF_PREFIX + "back_left/wheel_link",
-                self.TF_PREFIX + "base_footprint",
+                wheel_back_left_frame_id,
+                base_frame_id,
                 rospy.Time(0),
-                rospy.Duration(30.0)
+                rospy.Duration(5.0)
             )
             position, orientation = self.transformer.lookupTransform(
-                self.TF_PREFIX + "back_left/wheel_link",
-                self.TF_PREFIX + "base_footprint",
+                wheel_back_left_frame_id,
+                base_frame_id,
                 rospy.Time(0)
             )
             self.base_to_wheel_back_left_x = position[0]
         except Exception:
-            rospy.logwarn(
-                "Racecar State: transform from {1} to {0} not found".
-                format(self.TF_PREFIX + "back_left/wheel_link",
-                       self.TF_PREFIX + "base_footprint"
-                      )
-                )
-            self.base_to_wheel_back_left_x = 0.0
+            rospy.logfatal(
+                "Racecar State: transform from {1} to {0} not found, aborting!".
+                format(wheel_back_left_frame_id, base_frame_id)
+            )
+            exit()
 
     """
     clip_angle: Clip an angle to be between -pi and pi
