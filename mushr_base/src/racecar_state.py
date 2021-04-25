@@ -191,7 +191,8 @@ class RacecarState:
                 wheel_back_left_frame_id,
                 base_frame_id,
                 rospy.Time(0),
-                rospy.Duration(5.0)
+                rospy.Duration(15.0),
+                rospy.Duration(1.0)
             )
             position, orientation = self.transformer.lookupTransform(
                 wheel_back_left_frame_id,
