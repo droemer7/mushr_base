@@ -1,6 +1,6 @@
 <launch>
   <node pkg="map_server" type="map_server" name="map_actual_server"
-        args="map:=map_actual $(find amcl)/config/map_actual.yaml">
-    <param name="/map_file" value="$(find amcl)/config/map_actual.yaml"/>
+        args="map:=map_actual $(find amcl)/maps/actual.yaml">
+    <param name="/map_file" value="$(find amcl)/maps/actual.yaml"/>
   </node>
 </launch>
