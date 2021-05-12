@@ -25,7 +25,8 @@
 
     <!-- Car State -->
     <include file="$(find mushr_base)/launch/racecar_state.launch">
-      <arg name="car_name" value="$(arg car_name)"/>
+      <arg name="init_map_to_odom_tf" value="false"/>
+      <arg name="car_name"            value="$(arg car_name)"/>
     </include>
 
     <!-- VESC -->

@@ -7,7 +7,7 @@ import rospy
 import tf
 import tf.transformations
 from geometry_msgs.msg import PoseStamped, PoseWithCovarianceStamped
-from nav_msgs.srv import GetMap
+from nav_msgs.msg import OccupancyGrid
 from sensor_msgs.msg import JointState
 from std_msgs.msg import Float64
 from vesc_msgs.msg import VescStateStamped
@@ -100,6 +100,9 @@ class RacecarState:
         # that make base_footprint go out of bounds will be ignored.
         # Only set to true if a map is available.
         self.FORCE_IN_BOUNDS = bool(rospy.get_param("~force_in_bounds"))
+
+        # Initialize the robot's location on the map (generally for sim)
+        self.INIT_MAP_TO_ODOM_TF = bool(rospy.get_param("~init_map_to_odom_tf"))
 
         # Prepend this prefix to any broadcasted TFs
         self.TF_PREFIX = str(rospy.get_param("~car_name").rstrip("/"))
@@ -331,15 +334,18 @@ class RacecarState:
                 )
 
         except Exception:
-            self.br.sendTransform(
-                (self.cur_map_to_odom_trans[0], self.cur_map_to_odom_trans[1], 0.0001),
-                tf.transformations.quaternion_from_euler(
-                    0, 0, self.cur_map_to_odom_rot
-                ),
-                now,
-                self.TF_PREFIX + "odom",
-                "/map",
-            )
+            if (self.INIT_MAP_TO_ODOM_TF):
+                self.br.sendTransform(
+                    (self.cur_map_to_odom_trans[0], self.cur_map_to_odom_trans[1], 0.0001),
+                    tf.transformations.quaternion_from_euler(
+                        0, 0, self.cur_map_to_odom_rot
+                    ),
+                    now,
+                    self.TF_PREFIX + "odom",
+                    "/map",
+                )
+            else:
+                pass
         self.cur_map_to_odom_lock.release()
 
         # Get the time since the last update
@@ -543,11 +549,14 @@ class RacecarState:
     """
 
     def get_map(self):
-        # Use the 'static_map' service (launched by MapServer.launch) to get the map
-        map_service_name = rospy.get_param("~static_map", "static_map")
-        rospy.wait_for_service(map_service_name)
-        map_msg = rospy.ServiceProxy(map_service_name, GetMap)().map
-        map_info = map_msg.info  # Save info about map for later use
+        map_topic_name = rospy.get_param("~map_topic", "/map")
+        map_msg = rospy.wait_for_message(map_topic_name, OccupancyGrid)
+
+        # # Use the 'static_map' service (launched by MapServer.launch) to get the map
+        # map_service_name = rospy.get_param("~static_map", "static_map")
+        # rospy.wait_for_service(map_service_name)
+        # map_msg = rospy.ServiceProxy(map_service_name, GetMap)().map
+        # map_info = map_msg.info  # Save info about map for later use
 
         # Create numpy array representing map for later use
         array_255 = np.array(map_msg.data).reshape(
@@ -558,7 +567,7 @@ class RacecarState:
             array_255 == 0
         ] = 1  # Numpy array of dimension (map_msg.info.height, map_msg.info.width),
         # With values 0: not permissible, 1: permissible
-        return permissible_region, map_info
+        return permissible_region, map_msg.info
 
 
 if __name__ == "__main__":
