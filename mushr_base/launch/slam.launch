@@ -36,7 +36,7 @@
 		<param name="lasamplerange" type="double" value="0.005"/>
 		<param name="lasamplestep" type="double" value="0.005"/>
 		<param name="transform_publish_period" type="double" value="0.05"/>
-		<param name="occ_thresh" type="double" value="0.10"/>
+		<param name="occ_thresh" type="double" value="0.1"/>
 		<param name="maxRange" type="double" value="11.0"/>
 	</node>
 </launch>
