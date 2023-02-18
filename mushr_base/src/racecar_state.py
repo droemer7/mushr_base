@@ -104,6 +104,9 @@ class RacecarState:
         # Initialize the robot's location on the map (generally for sim)
         self.INIT_MAP_TO_ODOM_TF = bool(rospy.get_param("~init_map_to_odom_tf"))
 
+        # Disable publishing car_pose if using mocap (motion capture)
+        self.USE_MOCAP = bool(rospy.get_param("~use_mocap", False))
+
         # Prepend this prefix to any broadcasted TFs
         self.TF_PREFIX = str(rospy.get_param("~car_name").rstrip("/"))
         if len(self.TF_PREFIX) > 0:
@@ -138,6 +141,9 @@ class RacecarState:
         self.cur_map_to_odom_rot = 0.0
         self.cur_map_to_odom_lock = Lock()
 
+        # MOCAP only
+        self.car_pose = None
+
         # Message used to publish joint values
         self.joint_msg = JointState()
         self.joint_msg.name = [
@@ -160,7 +166,8 @@ class RacecarState:
         self.transformer = tf.TransformListener()
 
         # Publishes joint values
-        self.state_pub = rospy.Publisher("car_pose", PoseStamped, queue_size=1)
+        if not self.USE_MOCAP:
+            self.state_pub = rospy.Publisher("car_pose", PoseStamped, queue_size=1)
 
         # Publishes joint values
         self.cur_joints_pub = rospy.Publisher("joint_states", JointState, queue_size=1)
@@ -179,6 +186,12 @@ class RacecarState:
         self.servo_sub = rospy.Subscriber(
             "vesc/sensors/servo_position_command", Float64, self.servo_cb, queue_size=1
         )
+
+        # Subscribes to the pose from mocap
+        if self.USE_MOCAP:
+            self.pose_sub = rospy.Subscriber(
+                "car_pose", PoseStamped, self.pose_cb, queue_size=1
+            )
 
         # Timer to updates joints and tf
         self.update_timer = rospy.Timer(
@@ -295,6 +308,13 @@ class RacecarState:
         self.last_steering_angle_lock.release()
 
     """
+    pose_cb: Callback for position of car from mocap
+    """
+
+    def pose_cb(self, msg):
+        self.car_pose = msg
+
+    """
     timer_cb: Callback occuring at a rate of self.UPDATE_RATE. Updates the car joint
               angles and tf of the base_footprint w.r.t odom. Will also publish
               the tf between odom and map if it detects that no such tf is already
@@ -305,47 +325,66 @@ class RacecarState:
     def timer_cb(self, event):
         now = rospy.Time.now()
 
-        # Publish a tf between map and odom if one does not already exist
-        # Otherwise, get the most recent tf between map and odom
         self.cur_map_to_odom_lock.acquire()
-        try:
-            tmp_trans, tmp_rot = self.transformer.lookupTransform(
-                self.TF_PREFIX + "odom", "/map", rospy.Time(0)
-            )
-            self.cur_map_to_odom_trans[0] = tmp_trans[0]
-            self.cur_map_to_odom_trans[1] = tmp_trans[1]
+        # mocap gives us position via a topic not a transform
+        if self.USE_MOCAP and self.car_pose is not None:
+            self.cur_map_to_odom_trans[0] = self.car_pose.pose.position.x
+            self.cur_map_to_odom_trans[1] = self.car_pose.pose.position.y
+            orientation = self.car_pose.pose.orientation
+            orientation_list = [orientation.x, orientation.y, orientation.z, orientation.w]
             self.cur_map_to_odom_rot = (
-                tf.transformations.euler_from_quaternion(tmp_rot)
+                tf.transformations.euler_from_quaternion(orientation_list)
             )[2]
-
-            if tmp_trans[2] == -0.0001:
-                self.br.sendTransform(
-                    (
-                        self.cur_map_to_odom_trans[0],
-                        self.cur_map_to_odom_trans[1],
-                        0.0001,
-                    ),
-                    tf.transformations.quaternion_from_euler(
-                        0, 0, self.cur_map_to_odom_rot
-                    ),
-                    now,
-                    self.TF_PREFIX + "odom",
-                    "/map",
+            self.br.sendTransform(
+                (self.cur_map_to_odom_trans[0], self.cur_map_to_odom_trans[1], 0.0001),
+                tf.transformations.quaternion_from_euler(
+                    0, 0, self.cur_map_to_odom_rot
+                ),
+                now,
+                self.TF_PREFIX + "odom",
+                "/map",
+            )
+        else:
+            # Publish a tf between map and odom if one does not already exist
+            # Otherwise, get the most recent tf between map and odom
+            try:
+                tmp_trans, tmp_rot = self.transformer.lookupTransform(
+                    self.TF_PREFIX + "odom", "/map", rospy.Time(0)
                 )
+                self.cur_map_to_odom_trans[0] = tmp_trans[0]
+                self.cur_map_to_odom_trans[1] = tmp_trans[1]
+                self.cur_map_to_odom_rot = (
+                    tf.transformations.euler_from_quaternion(tmp_rot)
+                )[2]
 
-        except Exception:
-            if (self.INIT_MAP_TO_ODOM_TF):
-                self.br.sendTransform(
-                    (self.cur_map_to_odom_trans[0], self.cur_map_to_odom_trans[1], 0.0001),
-                    tf.transformations.quaternion_from_euler(
-                        0, 0, self.cur_map_to_odom_rot
-                    ),
-                    now,
-                    self.TF_PREFIX + "odom",
-                    "/map",
-                )
-            else:
-                pass
+                if tmp_trans[2] == -0.0001:
+                    self.br.sendTransform(
+                        (
+                            self.cur_map_to_odom_trans[0],
+                            self.cur_map_to_odom_trans[1],
+                            0.0001,
+                        ),
+                        tf.transformations.quaternion_from_euler(
+                            0, 0, self.cur_map_to_odom_rot
+                        ),
+                        now,
+                        self.TF_PREFIX + "odom",
+                        "/map",
+                    )
+
+            except Exception:
+                if (self.INIT_MAP_TO_ODOM_TF):
+                    self.br.sendTransform(
+                        (self.cur_map_to_odom_trans[0], self.cur_map_to_odom_trans[1], 0.0001),
+                        tf.transformations.quaternion_from_euler(
+                            0, 0, self.cur_map_to_odom_rot
+                        ),
+                        now,
+                        self.TF_PREFIX + "odom",
+                        "/map",
+                    )
+                else:
+                    pass
         self.cur_map_to_odom_lock.release()
 
         # Get the time since the last update
@@ -526,19 +565,20 @@ class RacecarState:
         self.cur_odom_to_base_lock.release()
 
         # Publish current state as a PoseStamped topic
-        cur_pose = PoseStamped()
-        cur_pose.header.frame_id = "/map"
-        cur_pose.header.stamp = now
-        cur_pose.pose.position.x = (
-            self.cur_odom_to_base_trans[0] + self.cur_map_to_odom_trans[0]
-        )
-        cur_pose.pose.position.y = (
-            self.cur_odom_to_base_trans[1] + self.cur_map_to_odom_trans[1]
-        )
-        cur_pose.pose.position.z = 0.0
-        rot = self.cur_odom_to_base_rot + self.cur_map_to_odom_rot
-        cur_pose.pose.orientation = utils.angle_to_quaternion(rot)
-        self.state_pub.publish(cur_pose)
+        if not self.USE_MOCAP:
+            cur_pose = PoseStamped()
+            cur_pose.header.frame_id = "/map"
+            cur_pose.header.stamp = now
+            cur_pose.pose.position.x = (
+                self.cur_odom_to_base_trans[0] + self.cur_map_to_odom_trans[0]
+            )
+            cur_pose.pose.position.y = (
+                self.cur_odom_to_base_trans[1] + self.cur_map_to_odom_trans[1]
+            )
+            cur_pose.pose.position.z = 0.0
+            rot = self.cur_odom_to_base_rot + self.cur_map_to_odom_rot
+            cur_pose.pose.orientation = utils.angle_to_quaternion(rot)
+            self.state_pub.publish(cur_pose)
 
     """
     get_map: Get the map and map meta data

@@ -5,7 +5,10 @@
   <arg name="mapping"  default="false"/>
 
   <!-- Version - racecar-mit, racecar-uw-tx2, or racecar-uw-nano -->
-    <arg name="racecar_version" default="racecar-uw-nano"/>
+  <arg name="racecar_version" default="racecar-uw-nano"/>
+
+  <!-- Use mocap published car pose instead of using odom -->
+  <arg name="use_mocap" default="false" />
 
   <!-- Map -->
   <group unless="$(arg mapping)">
@@ -25,8 +28,9 @@
 
     <!-- Car State -->
     <include file="$(find mushr_base)/launch/racecar_state.launch">
-      <arg name="init_map_to_odom_tf" value="false"/>
       <arg name="car_name"            value="$(arg car_name)"/>
+      <arg name="init_map_to_odom_tf" value="false"/>
+      <arg name="use_mocap"           value="$(arg use_mocap)" />
     </include>
 
     <!-- VESC -->

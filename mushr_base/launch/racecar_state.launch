@@ -6,6 +6,9 @@
 
   <!-- Set to force robot to abide by map_server walls -->
   <arg name="force_in_bounds" default="false"/>
+  
+  <!-- Use mocap published car pose instead of using odom -->
+  <arg name="use_mocap" default="false"/>
 
   <node pkg="mushr_base" type="racecar_state.py" name="racecar_state" output="screen">
     <param name="update_rate"           value="20.0"/>
@@ -23,6 +26,7 @@
     <param name="theta_fix_noise"       value="0.000001"/>
     <param name="force_in_bounds"       value="$(arg force_in_bounds)"/>
     <param name="init_map_to_odom_tf"   value="$(arg init_map_to_odom_tf)"/>
+    <param name="use_mocap"             value="$(arg use_mocap)"/>
     <param name="map_topic"             value="/map_actual"/>
     <param name="car_name"              value="$(arg car_name)"/>
   </node>

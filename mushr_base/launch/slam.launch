@@ -25,11 +25,11 @@
 		<param name="angularUpdate" type="double" value="0.5"/>
 		<param name="temporalUpdate" type="double" value="-1.0"/>
 		<param name="resampleThreshold" type="double" value="0.5"/>
-		<param name="particles" type="int" value="30"/>
-		<param name="xmin" type="double" value="-20"/>
-		<param name="ymin" type="double" value="-20"/>
-		<param name="xmax" type="double" value="20"/>
-		<param name="ymax" type="double" value="20"/>
+		<param name="particles" type="int" value="100"/>
+		<param name="xmin" type="double" value="-100"/>
+		<param name="ymin" type="double" value="-100"/>
+		<param name="xmax" type="double" value="100"/>
+		<param name="ymax" type="double" value="100"/>
 		<param name="delta" type="double" value="0.02"/>
 		<param name="llsamplerange" type="double" value="0.01"/>
 		<param name="llsamplestep" type="double" value="0.01"/>
@@ -39,4 +39,5 @@
 		<param name="occ_thresh" type="double" value="0.1"/>
 		<param name="maxRange" type="double" value="11.0"/>
 	</node>
+
 </launch>
