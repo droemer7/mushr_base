@@ -104,7 +104,6 @@ void AckermannCmdMuxNodelet::onInit()
 void AckermannCmdMuxNodelet::reloadConfiguration(ackermann_cmd_mux::reloadConfig &config, uint32_t unused_level)
 {
 	std::string yaml_cfg_file;
-	ros::NodeHandle &nh = this->getNodeHandle();
 	ros::NodeHandle &nh_priv = this->getPrivateNodeHandle();
 	if( config.yaml_cfg_file == "" )
 	{
